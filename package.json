@@ -1,0 +1,16 @@
+{
+    "name": "com.pixel.2d.tilemap.extras.alt",
+    "displayName": "2D Tilemap Extras Alternative",
+    "version": "0.0.1",
+    "unity": "2021.2",
+    "description": "2D Tilemap Extras Alternative is a package that contains extra scripts for use with 2D Tilemap features in Unity.",
+    "keywords": [
+        "2d"
+    ],
+    "category": "2D",
+    "dependencies": {
+        "com.unity.modules.tilemap": "1.0.0",
+        "com.unity.2d.tilemap": "1.0.0"
+    },
+    "samples": []
+}
