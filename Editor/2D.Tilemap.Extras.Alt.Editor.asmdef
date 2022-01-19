@@ -1,7 +1,7 @@
 {
     "name": "2D.Tilemap.Extras.Alt.Editor",
     "references": [
-
+        "2D.Tilemap.Extras.Alt"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
