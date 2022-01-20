@@ -10,6 +10,21 @@ namespace UnityEngine
     public class RuleTileBitmasking : TileBase
     {
         /// <summary>
+        /// The Default Sprite set when creating a new Rule.
+        /// </summary>
+        [SerializeField]
+        public Sprite m_DefaultSprite;
+        /// <summary>
+        /// The Default GameObject set when creating a new Rule.
+        /// </summary>
+        [SerializeField]
+        public GameObject m_DefaultGameObject;
+        /// <summary>
+        /// The Default Collider Type set when creating a new Rule.
+        /// </summary>
+        [SerializeField]
+        public Tile.ColliderType m_DefaultColliderType = Tile.ColliderType.Sprite;
+        /// <summary>
         /// The Sprites used for randomizing output.
         /// </summary>
         [SerializeField]
@@ -18,7 +33,7 @@ namespace UnityEngine
         /// <summary>
         /// List of bitmasking values.
         /// </summary>
-        private readonly static ushort[] m_BitmaskingValues = new ushort[]
+        private readonly ushort[] m_BitmaskingValues = new ushort[]
         {
             47, 0, 1, 0, 0, 0, 0, 0, 2, 0, 3, 4, 0, 0, 0, 0, 5, 0, 6, 0, 0, 0, 7, 0, 8, 0, 9, 10, 0, 0,
             11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -43,9 +58,36 @@ namespace UnityEngine
 
             int index = (GetBitmaskingValue(position, tilemap));
 
+            tileData.sprite = m_DefaultSprite;
+            tileData.gameObject = m_DefaultGameObject;
+            tileData.colliderType = m_DefaultColliderType;
+            tileData.flags = TileFlags.LockTransform;
+            tileData.transform = Matrix4x4.identity;
+
             if ((m_Sprites != null) && (m_Sprites.Length > 0))
             {
                 tileData.sprite = m_Sprites[index];
+            }
+        }
+
+        /// <summary>
+        /// This method is called when the tile is refreshed.
+        /// </summary>
+        /// <param name="position">Position of the Tile on the Tilemap.</param>
+        /// <param name="tilemap">The Tilemap the tile is present on.</param>
+        public override void RefreshTile(Vector3Int position, ITilemap tilemap)
+        {
+            for (int yd = -1; yd <= 1; yd++)
+            {
+                for (int xd = -1; xd <= 1; xd++)
+                {
+                    Vector3Int pos = new Vector3Int(position.x + xd, position.y + yd, position.z);
+
+                    if (TileValue(pos, tilemap))
+                    {
+                        tilemap.RefreshTile(pos);
+                    }
+                }
             }
         }
 
@@ -55,16 +97,16 @@ namespace UnityEngine
         /// <param name="position">Position of the Tile on the Tilemap.</param>
         /// <param name="tilemap">The Tilemap the tile is present on.</param>
         /// <returns>The bitmasking value.</returns>
-        public int GetBitmaskingValue(Vector3Int position, ITilemap tileMap)
+        public int GetBitmaskingValue(Vector3Int position, ITilemap tilemap)
         {
-            bool northTile = TileValue(GetOffsetPosition(position, new Vector3Int(0, 1, 0)), tileMap);
-            bool southTile = TileValue(GetOffsetPosition(position, new Vector3Int(0, -1, 0)), tileMap);
-            bool westTile = TileValue(GetOffsetPosition(position, new Vector3Int(-1, 0, 0)), tileMap);
-            bool eastTile = TileValue(GetOffsetPosition(position, new Vector3Int(1, 0, 0)), tileMap);
-            bool northWestTile = TileValue(GetOffsetPosition(position, new Vector3Int(-1, 1, 0)), tileMap) && westTile && northTile;
-            bool northEastTile = TileValue(GetOffsetPosition(position, new Vector3Int(1, 1, 0)), tileMap) && northTile && eastTile;
-            bool southWestTile = TileValue(GetOffsetPosition(position, new Vector3Int(-1, -1, 0)), tileMap) && southTile && westTile;
-            bool southEastTile = TileValue(GetOffsetPosition(position, new Vector3Int(1, -1, 0)), tileMap) && southTile && eastTile;
+            bool northTile = TileValue(GetOffsetPosition(position, new Vector3Int(0, 1, 0)), tilemap);
+            bool southTile = TileValue(GetOffsetPosition(position, new Vector3Int(0, -1, 0)), tilemap);
+            bool westTile = TileValue(GetOffsetPosition(position, new Vector3Int(-1, 0, 0)), tilemap);
+            bool eastTile = TileValue(GetOffsetPosition(position, new Vector3Int(1, 0, 0)), tilemap);
+            bool northWestTile = TileValue(GetOffsetPosition(position, new Vector3Int(-1, 1, 0)), tilemap) && westTile && northTile;
+            bool northEastTile = TileValue(GetOffsetPosition(position, new Vector3Int(1, 1, 0)), tilemap) && northTile && eastTile;
+            bool southWestTile = TileValue(GetOffsetPosition(position, new Vector3Int(-1, -1, 0)), tilemap) && southTile && westTile;
+            bool southEastTile = TileValue(GetOffsetPosition(position, new Vector3Int(1, -1, 0)), tilemap) && southTile && eastTile;
 
             int index = 1 * ((northWestTile) ? 1 : 0) +
                         2 * ((northTile) ? 1 : 0) +
@@ -78,6 +120,12 @@ namespace UnityEngine
             return m_BitmaskingValues[index];
         }
 
+        /// <summary>
+        /// Checks if is using this tile at given position.
+        /// </summary>
+        /// <param name="position">Position of the Tile on the Tilemap.</param>
+        /// <param name="tilemap">The Tilemap the tile is present on.</param>
+        /// <returns>True if tile at position is this, False if not.</returns>
         private bool TileValue(Vector3Int position, ITilemap tileMap)
         {
             TileBase tile = tileMap.GetTile(position);
