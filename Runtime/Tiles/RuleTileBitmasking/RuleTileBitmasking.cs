@@ -1,5 +1,8 @@
 using System;
 using UnityEngine.Tilemaps;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UnityEngine
 {
@@ -10,25 +13,25 @@ namespace UnityEngine
     public class RuleTileBitmasking : TileBase
     {
         /// <summary>
-        /// The Default Sprite set when creating a new Rule.
-        /// </summary>
-        [SerializeField]
-        public Sprite m_DefaultSprite;
-        /// <summary>
-        /// The Default GameObject set when creating a new Rule.
-        /// </summary>
-        [SerializeField]
-        public GameObject m_DefaultGameObject;
-        /// <summary>
-        /// The Default Collider Type set when creating a new Rule.
-        /// </summary>
-        [SerializeField]
-        public Tile.ColliderType m_DefaultColliderType = Tile.ColliderType.Sprite;
-        /// <summary>
-        /// The Sprites used for randomizing output.
+        /// The Sprites used for output.
         /// </summary>
         [SerializeField]
         public Sprite[] m_Sprites;
+
+        [SerializeField]
+        private Color m_Color = Color.white;
+
+        [SerializeField]
+        private Matrix4x4 m_Transform = Matrix4x4.identity;
+
+        [SerializeField]
+        private TileFlags m_Flags = TileFlags.LockColor;
+
+        /// <summary>
+        /// The Collider Type set when creating a new Rule.
+        /// </summary>
+        [SerializeField]
+        public Tile.ColliderType m_ColliderType = Tile.ColliderType.Sprite;
 
         /// <summary>
         /// List of bitmasking values.
@@ -54,15 +57,12 @@ namespace UnityEngine
         /// <param name="tileData">Data to render the tile.</param>
         public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData)
         {
-            base.GetTileData(position, tilemap, ref tileData);
+            tileData.color = m_Color;
+            tileData.transform = m_Transform;
+            tileData.flags = m_Flags;
+            tileData.colliderType = m_ColliderType;
 
             int index = (GetBitmaskingValue(position, tilemap));
-
-            tileData.sprite = m_DefaultSprite;
-            tileData.gameObject = m_DefaultGameObject;
-            tileData.colliderType = m_DefaultColliderType;
-            tileData.flags = TileFlags.LockTransform;
-            tileData.transform = Matrix4x4.identity;
 
             if ((m_Sprites != null) && (m_Sprites.Length > 0))
             {
@@ -81,11 +81,11 @@ namespace UnityEngine
             {
                 for (int xd = -1; xd <= 1; xd++)
                 {
-                    Vector3Int pos = new Vector3Int(position.x + xd, position.y + yd, position.z);
+                    Vector3Int location = new Vector3Int(position.x + xd, position.y + yd, position.z);
 
-                    if (TileValue(pos, tilemap))
+                    if (TileValue(location, tilemap))
                     {
-                        tilemap.RefreshTile(pos);
+                        tilemap.RefreshTile(location);
                     }
                 }
             }
@@ -126,14 +126,14 @@ namespace UnityEngine
         /// <param name="position">Position of the Tile on the Tilemap.</param>
         /// <param name="tilemap">The Tilemap the tile is present on.</param>
         /// <returns>True if tile at position is this, False if not.</returns>
-        private bool TileValue(Vector3Int position, ITilemap tileMap)
+        private bool TileValue(Vector3Int position, ITilemap tilemap)
         {
-            TileBase tile = tileMap.GetTile(position);
+            TileBase tile = tilemap.GetTile(position);
             return (tile != null && tile == this);
         }
 
         /// <summary>
-        /// Get the offset for the given position with the given offset.
+        /// Get the offset for the given position.
         /// </summary>
         /// <param name="position">Position to offset.</param>
         /// <param name="offset">Offset for the position.</param>
@@ -143,4 +143,45 @@ namespace UnityEngine
             return position + offset;
         }
     }
+
+
+#if UNITY_EDITOR
+    [CustomEditor(typeof(RuleTileBitmasking))]
+    public class RuleTileBitmaskingEditor : Editor
+    {
+        private SerializedProperty m_Sprites;
+        private SerializedProperty m_Color;
+        private SerializedProperty m_ColliderType;
+
+        private RuleTileBitmasking tile { get { return (target as RuleTileBitmasking); } }
+
+        /// <summary>
+        /// OnEnable for RuleTileBitmasking.
+        /// </summary>
+        public void OnEnable()
+        {
+            m_Sprites = serializedObject.FindProperty("m_Sprites");
+            m_Color = serializedObject.FindProperty("m_Color");
+            m_ColliderType = serializedObject.FindProperty("m_ColliderType");
+        }
+
+        /// <summary>
+        /// Draws an Inspector for the RuleTileBitmasking.
+        /// </summary>
+        public override void OnInspectorGUI()
+        {
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.PropertyField(m_Color);
+            EditorGUILayout.PropertyField(m_ColliderType);
+            EditorGUILayout.PropertyField(m_Sprites);
+
+            serializedObject.ApplyModifiedProperties();
+
+            EditorGUI.EndChangeCheck();
+        }
+    }
+#endif
 }
