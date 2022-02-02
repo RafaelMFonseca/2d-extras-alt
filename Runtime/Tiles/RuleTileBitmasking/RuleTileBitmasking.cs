@@ -163,6 +163,11 @@ namespace UnityEngine
             m_Sprites = serializedObject.FindProperty("m_Sprites");
             m_Color = serializedObject.FindProperty("m_Color");
             m_ColliderType = serializedObject.FindProperty("m_ColliderType");
+
+            if (tile.m_Sprites == null || tile.m_Sprites.Length != 48)
+            {
+                tile.m_Sprites = new Sprite[48];
+            }
         }
 
         /// <summary>
