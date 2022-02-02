@@ -19,9 +19,7 @@ Created by Rafael Moreira Fonseca
 ```json
 {
     "dependencies": {
-        /* ... */
         "com.pixel.2d.tilemap.extras.alt": "https://github.com/rafaelmfonseca/2d-extras-alt.git",
-        /* ... */
     }
 }
 ```
